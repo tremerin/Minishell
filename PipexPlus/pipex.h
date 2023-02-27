@@ -26,9 +26,11 @@
 typedef struct s_pipex
 {
     char    **paths;
-    int     fd[2];
     char    *command;
     char    **command_args;
+    int     fd[10][2];
+    pid_t   pid[10];
+    int     n_cmd;
 }   t_pipex;
 
 # endif
