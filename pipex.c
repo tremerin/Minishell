@@ -56,7 +56,9 @@ char	*get_cmd(char **paths, char *cmd)
 
 void	exe_command(t_pipex *pipex, char *cmd, char **envp)
 {
+	//liberar split del comando anterior si existe
 	pipex->command_args = ft_split(cmd, ' ');
+	//ver si es un programa, obtener la ruta absoluta
 	pipex->command = get_cmd(pipex->paths, pipex->command_args[0]);
 	execve(pipex->command, pipex->command_args, envp);
 }
@@ -78,11 +80,13 @@ void	dup_fd(t_pipex *pipex, int children)
 {
 	if (children == 0)
 	{
+		printf("n_cmd: %d\n", pipex->n_cmd);
 		if (pipex->in_fd != -2)
 			dup2(pipex->in_fd, STDIN_FILENO);
 		if (pipex->out_fd != -2 && pipex->n_cmd == 1)
 			dup2(pipex->out_fd, STDOUT_FILENO);
-		dup2(pipex->fd[0][1], STDOUT_FILENO);
+		if (pipex->n_cmd > 1)
+			dup2(pipex->fd[0][1], STDOUT_FILENO);
 	}
 	else if (children == pipex->n_cmd -1)
 	{
@@ -129,14 +133,17 @@ int main(int argc, char **argv, char **envp)
 
 	pipex.in_fd = -2;
 	pipex.out_fd = -2;
+	pipex.double_out = 0; // ( 1 >> ) ( 0 > )
 	pipex.outfile = ft_strdup("./file.txt");
 	//pipex.infile = ft_strdup("./infile.txt");
 	pipex.infile = NULL;
 	//pipex.outfile = NULL;
 	if (pipex.infile != NULL)
 		pipex.in_fd = open(pipex.infile, O_RDONLY);
-	if (pipex.outfile != NULL)
-		pipex.out_fd = open(pipex.outfile, O_TRUNC | O_CREAT | O_RDWR, 0664);
+	if (pipex.outfile != NULL && pipex.double_out)
+		pipex.out_fd = open(pipex.outfile, O_APPEND | O_CREAT | O_RDWR, 0664); // O_APPEND escribe desde el final (redireccion >>)
+	else
+		pipex.out_fd = open(pipex.outfile, O_TRUNC | O_CREAT | O_RDWR, 0664); // O_TRUNC escribe desde el principio (redireccion >)
 	pipex.n_cmd = argc -1;
 	pipex.paths = envp_split(envp);
 	exe_pipex(&pipex, argv, envp);
@@ -147,6 +154,28 @@ int main(int argc, char **argv, char **envp)
 	free_split(pipex.paths);
 	pipex.in_fd = -2;
 	pipex.out_fd = -2;
+	/* ejecutar programa */
+	char	cwd[PATH_MAX];
+	char	*path;
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+		printf("getcwd: %s\n", cwd);
+	char **test_cmd = ft_split("./my_prog hola holita adios", ' ');
+	if (test_cmd[0][0] == '.' && test_cmd[0][1] == '/')
+		path = ft_strjoin(cwd, test_cmd[0]+1);
+	else if (test_cmd[0][0] == '.' && test_cmd[0][1] == '.')
+	{
+		path = ft_strjoin(cwd, "/");
+		path = ft_strjoin(path, test_cmd[0]);
+	}
+	else if (test_cmd[0][0] == '/')
+		path = ft_strdup(test_cmd[0]);
+	printf("prog path: %s\n", path);
+	test_cmd[0] = ft_strdup(ft_strrchr(test_cmd[0], '/')+1);
+	printf("test_cmd[0]: %s\n", test_cmd[0]);
+	execve(path, test_cmd, envp);
+	/* ejecutar programa  v1 */
+	//char **test_cmd = ft_split("my_prog hola holita adios", ' ');
+	//execve("/home/fgalan-r/Minishell/PipexPlus/../PipexPlus/my_prog", test_cmd, envp);
 	return (0);
 }
 
