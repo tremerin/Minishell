@@ -1,13 +1,4 @@
-a.out
 cmd_hola.c
-dir
-file.txt
-infile.txt
-Libft
-Makefile
 my_prog
-pipex
-pipex.c
-pipex.h
 pipex.o
 trescomandos.c
