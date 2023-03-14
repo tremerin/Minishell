@@ -22,6 +22,7 @@
 
 /*to perror*/
 # include <stdio.h>
+# include <limits.h>
 
 typedef struct s_pipex
 {
@@ -35,6 +36,7 @@ typedef struct s_pipex
 	char	*outfile;
 	int		in_fd;
 	int		out_fd;
+	int		double_out;
 }	t_pipex;
 
 #endif
