@@ -66,11 +66,15 @@ char	*get_cmd(char **paths, char *cmd)
 /* version 2, comandos y ejecutables */
 void	exe_command(t_pipex *pipex, char *cmd, char **envp)
 {
-	char	*cwd[PATH_MAX];
+	char	*cwd;
 
-	getcwd(cwd, sizeof(cwd));
+	//printf("check\n");
+	cwd = NULL;
+	//cwd = ft_strdup(getcwd(cwd, sizeof(1024)));
+	cwd = ft_strdup("/home/fgalan-r/Minishell/PipexPlus");
+	//printf("cwd: %s\n", cwd);
 	pipex->command_args = ft_split(cmd, ' ');
-	if (ft_strchr(pipex->command_args[0], '/') != 0)
+	if (ft_strchr(pipex->command_args[0], '/'))
 	{
 		if (ft_strncmp(pipex->command_args[0], "./", 2) == 0)
 		{
@@ -109,7 +113,7 @@ void	dup_fd(t_pipex *pipex, int children)
 {
 	if (children == 0)
 	{
-		printf("n_cmd: %d\n", pipex->n_cmd);
+		//printf("n_cmd: %d\n", pipex->n_cmd);
 		if (pipex->in_fd != -2)
 			dup2(pipex->in_fd, STDIN_FILENO);
 		if (pipex->out_fd != -2 && pipex->n_cmd == 1)
@@ -148,6 +152,7 @@ void	exe_pipex(t_pipex *pipex, char **argv, char **envp)
 		{
 			dup_fd(pipex, i);
 			close_fd(pipex);
+			//printf("comand: %d\n", i);
 			exe_command(pipex, argv[i + 1], envp);
 		}
 		i++;
@@ -163,10 +168,10 @@ int main(int argc, char **argv, char **envp)
 	pipex.in_fd = -2;
 	pipex.out_fd = -2;
 	pipex.double_out = 0; // ( 1 >> ) ( 0 > )
-	pipex.outfile = ft_strdup("./file.txt");
+	//pipex.outfile = ft_strdup("./file.txt");
 	//pipex.infile = ft_strdup("./infile.txt");
 	pipex.infile = NULL;
-	//pipex.outfile = NULL;
+	pipex.outfile = NULL;
 	if (pipex.infile != NULL)
 		pipex.in_fd = open(pipex.infile, O_RDONLY);
 	if (pipex.outfile != NULL && pipex.double_out)
