@@ -1,5 +1,23 @@
 #include "pipex.h"
 
+void	heredoc(t_pipex *pipex)
+{
+	char	*buf;
+
+	pipex->in_fd = open(pipex->infile, O_TRUNC | O_CREAT | O_WRONLY, 0644);
+	while (1)
+	{
+		write(1, "heredoc> ", 9);
+		buf = get_next_line(0);
+		if (!ft_strncmp(pipex->limit, buf, ft_strlen(pipex->limit)))
+			break ;
+		write(pipex->in_fd, buf, ft_strlen(buf));
+		free(buf);
+	}
+	free(buf);
+	close(pipex->in_fd);
+}
+
 char	**envp_split(char **envp)
 {
 	int		i;
@@ -69,7 +87,7 @@ void	exe_command(t_pipex *pipex, char *cmd, char **envp)
 	char	*cwd;
 
 	//printf("check\n");
-	cwd = NULL;
+	//cwd = NULL;
 	//cwd = ft_strdup(getcwd(cwd, sizeof(1024)));
 	cwd = ft_strdup("/home/fgalan-r/Minishell/PipexPlus");
 	//printf("cwd: %s\n", cwd);
@@ -152,7 +170,6 @@ void	exe_pipex(t_pipex *pipex, char **argv, char **envp)
 		{
 			dup_fd(pipex, i);
 			close_fd(pipex);
-			//printf("comand: %d\n", i);
 			exe_command(pipex, argv[i + 1], envp);
 		}
 		i++;
@@ -170,7 +187,14 @@ int main(int argc, char **argv, char **envp)
 	pipex.double_out = 0; // ( 1 >> ) ( 0 > )
 	//pipex.outfile = ft_strdup("./file.txt");
 	//pipex.infile = ft_strdup("./infile.txt");
-	pipex.infile = NULL;
+	pipex.heredoc = 1;
+	pipex.limit = ft_strdup("fin");
+	if (pipex.heredoc)
+	{
+		pipex.infile = ft_strdup("./temp.text");
+		heredoc(&pipex);
+	}
+	//pipex.infile = NULL;
 	pipex.outfile = NULL;
 	if (pipex.infile != NULL)
 		pipex.in_fd = open(pipex.infile, O_RDONLY);
@@ -188,85 +212,5 @@ int main(int argc, char **argv, char **envp)
 	free_split(pipex.paths);
 	pipex.in_fd = -2;
 	pipex.out_fd = -2;
-	/* ejecutar programa */
-	// char	cwd[PATH_MAX];
-	// char	*path = NULL;
-	// if (getcwd(cwd, sizeof(cwd)) != NULL)
-	// 	printf("getcwd: %s\n", cwd);
-	// char **test_cmd = ft_split("./my_prog hola holita adios", ' ');
-	// if (test_cmd[0][0] == '.' && test_cmd[0][1] == '/')
-	// 	path = ft_strjoin(cwd, test_cmd[0] +1);
-	// else if (test_cmd[0][0] == '.' && test_cmd[0][1] == '.')
-	// {
-	// 	path = ft_strjoin(cwd, "/");
-	// 	path = ft_strjoin(path, test_cmd[0]);
-	// }
-	// else if (test_cmd[0][0] == '/')
-	// 	path = ft_strdup(test_cmd[0]);
-	// printf("prog path: %s\n", path);
-	// test_cmd[0] = ft_strdup(ft_strrchr(test_cmd[0], '/')+1);
-	// printf("test_cmd[0]: %s\n", test_cmd[0]);
-	// execve(path, test_cmd, envp);
-	/* ejecutar programa  v1 */
-	//char **test_cmd = ft_split("my_prog hola holita adios", ' ');
-	//execve("/home/fgalan-r/Minishell/PipexPlus/../PipexPlus/my_prog", test_cmd, envp);
 	return (0);
 }
-
-/* main original funcionando */
-// int	main(int argc, char **argv, char **envp)
-// {
-// 	t_pipex		pipex;
-// 	pid_t		pid1;
-// 	pid_t		pid2;
-// 	pid_t		pid3;
-// 	int			fd[10][2];
-
-// 	if (argc > 1)
-// 	{
-// 		pipex.paths = envp_split(envp);
-// 		pipe(fd[0]);
-// 		pipe(fd[1]);
-// 		pid1 = fork();
-// 		if (pid1 == 0)
-// 		{
-// 			dup2(fd[0][1], STDOUT_FILENO);
-// 			close(fd[0][0]);
-// 			close(fd[0][1]);
-// 			close(fd[1][0]);
-// 			close(fd[1][1]);
-// 			exe_command(&pipex, argv[1], envp);
-// 		}
-// 		pid2 = fork();
-// 		if (pid2 == 0)
-// 		{
-// 			dup2(fd[1][1], STDOUT_FILENO);
-// 			dup2(fd[0][0], STDIN_FILENO);
-// 			close(fd[0][0]);
-// 			close(fd[0][1]);
-// 			close(fd[1][0]);
-// 			close(fd[1][1]);
-// 			exe_command(&pipex, argv[2], envp);
-// 		}
-// 		pid3 = fork();
-// 		if (pid3 == 0)
-// 		{
-// 			dup2(fd[1][0], STDIN_FILENO);
-// 			close(fd[0][0]);
-// 			close(fd[0][1]);
-// 			close(fd[1][1]);
-// 			close(fd[1][0]);
-// 			exe_command(&pipex, argv[3], envp);
-// 		}
-// 		close(fd[0][0]);
-// 		close(fd[0][1]);
-// 		close(fd[1][0]);
-// 		close(fd[1][1]);
-// 		//waitpid(pid1, NULL, 0);
-// 		//waitpid(pid2, NULL, 0);
-// 		//waitpid(pid3, NULL, 0);
-// 		waitpid(-1, NULL, 0);
-// 		free_split(pipex.paths);
-// 	}
-// 	return (0);
-// }

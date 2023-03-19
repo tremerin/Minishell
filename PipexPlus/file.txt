@@ -1,4 +1,0 @@
-cmd_hola.c
-my_prog
-pipex.o
-trescomandos.c

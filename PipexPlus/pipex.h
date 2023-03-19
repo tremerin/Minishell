@@ -29,6 +29,8 @@ typedef struct s_pipex
 	char	**paths;
 	char	*command;
 	char	**command_args;
+	char	*limit;
+	int		heredoc;
 	int		fd[10][2];
 	pid_t	pid[10];
 	int		n_cmd;
@@ -37,6 +39,7 @@ typedef struct s_pipex
 	int		in_fd;
 	int		out_fd;
 	int		double_out;
+
 }	t_pipex;
 
 #endif
