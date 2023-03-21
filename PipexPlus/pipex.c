@@ -9,7 +9,7 @@ void	heredoc(t_pipex *pipex)
 	{
 		write(1, "heredoc> ", 9);
 		buf = get_next_line(0);
-		if (!ft_strncmp(pipex->limit, buf, ft_strlen(pipex->limit)))
+		if (!ft_strncmp(pipex->limit, buf, ft_strlen(buf) - 1))
 			break ;
 		write(pipex->in_fd, buf, ft_strlen(buf));
 		free(buf);
