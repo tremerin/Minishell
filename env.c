@@ -10,6 +10,46 @@ typedef struct s_mini
 	char	*p_exit;     //valor devuleto al finalizar programa
 } t_mini;
 
+/* Cabeceras Built-in */
+
+/* Imprime las varialbes de entorn */
+int		env(t_mini *mini);
+
+/* Añade en env una variable que exista en var */
+int		export(t_mini *mini, char *var_name);
+
+/* Borra una variable de las variables locales y de entorno */
+int		unset(t_mini *mini, char *var_name);
+
+/* Recive el nombre de una variable y devuelve su contenido */
+char    *expand_var(char *name_var, char **env);
+
+/* Añana de una variable a var */
+void 	enter_var(t_mini *mini, char *enter_var);
+
+/* Devuelve el nombre de la variable dentro de una cadena */
+char	*name_var(char *env_var);
+
+/* Crea una copia de **envp original para iniciar env y var */
+void	init_env(t_mini *mini, char **envp);
+
+/* Añade un nuevo char *str a un char **src */
+char	**add_str(char **src, char *str, int *len);
+
+/* Comprueba que la variable existe en la posicion i del char **src */
+int		contain_var(char **src, char *env_var ,int i);
+
+/* Borra un char *var_name de un char **src */
+char	**del_var(char **src, char *var_name, int len);
+
+/* Busca en el char **src una variable con el mismo nombre que  
+char *new_value y cambia el contenido */
+void	change_value(char **src, char *new_value);
+
+/* Imprime las variables de env y var. SOLO DEBUG */ 
+void	print_env(t_mini *mini);
+
+
 void free_split(char **split)
 {
 	int		i;
@@ -86,7 +126,7 @@ void	init_env(t_mini *mini, char **envp)
 	mini->var_len = mini->env_len;
 }
 
-/* Imprime las variables del array elegido*/ //debug version
+/* Imprime las variables de env y var. SOLO DEBUG */ 
 void	print_env(t_mini *mini)
 {
 	int		i;
@@ -100,14 +140,14 @@ void	print_env(t_mini *mini)
 	}
 	printf("-------------- local var: \n");
 	i = 0;
-	if (mini->var_len > 0)
-		while (mini->var[i])
-		{
-			printf("var [%d]: %s\n", i, mini->var[i]);
-			i++;
-		}
+	while (mini->var[i])
+	{
+		printf("var [%d]: %s\n", i, mini->var[i]);
+		i++;
+	}
 }
 
+/* Imprime las varialbes de entorn */
 int	env(t_mini *mini)
 {
 	int	i;
@@ -121,6 +161,7 @@ int	env(t_mini *mini)
 	return (0);
 }
 
+/* Añada un nuevo *char a un **char */
 char	**add_str(char **src, char *str, int *len)
 {
 	char	**new;
@@ -162,6 +203,7 @@ int	contain_var(char **src, char *env_var ,int i)
 	return (1);
 }
 
+/* Borra un char *var_name de un char **src */
 char	**del_var(char **src, char *var_name, int len)
 {
 	char	**new;
@@ -187,6 +229,7 @@ char	**del_var(char **src, char *var_name, int len)
 	return (new);
 }
 
+/* Borra una variable de las variables locales y de entorno */
 int	unset(t_mini *mini, char *var_name)
 {
 	char	*expand;
@@ -207,6 +250,8 @@ int	unset(t_mini *mini, char *var_name)
 	return (1);
 }
 
+/* Busca en el char **src una variable con el mismo nombre que  
+char *new_value y cambia el contenido */
 void	change_value(char **src, char *new_value)
 {
 	int		i;
@@ -232,24 +277,7 @@ void	change_value(char **src, char *new_value)
 	free(name);
 }
 
-/* dada una variable y su valor la añade o actualiza a un nuevo valor en env*/
-void enter_env(t_mini *mini, char *enter_var)
-{
-	char	*name;
-	char	*expand;
-
-	name = name_var(enter_var);
-	expand = expand_var(name, mini->env);
-	if (expand)
-	{
-		change_value(mini->env, enter_var);
-		free(expand);
-	}
-	else
-		mini->env = add_str(mini->env, enter_var, &mini->env_len);
-	free(name);
-}
-
+/* Añade en env una variable que exista en var */
 int	export(t_mini *mini, char *var_name)
 {
 	char	*expand;
@@ -268,10 +296,12 @@ int	export(t_mini *mini, char *var_name)
 		}
 		mini->env = add_str(mini->env, enter_var, &mini->env_len);
 		free(enter_var);
+		return (0);
 	}
 	return (1);
 }
 
+/* Añana de una variable a var */
 void enter_var(t_mini *mini, char *enter_var)
 {
 	char	*name;
@@ -293,6 +323,7 @@ void enter_var(t_mini *mini, char *enter_var)
 	free(name);
 }
 
+/* Main para pruebas */
 void	ft_void(void)
 {
 	system("leaks -q a.out");
@@ -305,15 +336,17 @@ int main(int argc, char **argv, char **envp)
 
 	//atexit(ft_void);
 	init_env(&mini, envp);
-	//str = expand_var(argv[1], mini.env);
-	//if (str)
-	//	printf("%s\n", str);
-	//print_env(&mini);
-	//printf("-----------------------------------------\n");
-	//printf("len: %d\n", mini.env_len);
+	str = expand_var(argv[1], mini.env);
+	if (str)
+	{
+		printf("%s\n", str);
+		free(str);
+	}
 	enter_var(&mini, "VAR2=adios me voy");
+	enter_var(&mini, "VAR1=hola");
 	enter_var(&mini, "VAR3=holita");
-	print_env(&mini);
+	export(&mini, "VAR3");
+	env(&mini);
 	printf("-----------------------------------------\n");
 	enter_var(&mini, "VAR1=adios");
 	enter_var(&mini, "VAR2=ya me fui");
@@ -324,10 +357,14 @@ int main(int argc, char **argv, char **envp)
 	export(&mini, "VAR1");
 	unset(&mini, "USER");
 	unset(&mini, "VAR4");
-	//del_env(&mini, "_");
-	//print_env(&mini);
 	env(&mini);
 	printf("-----------------------------------------\n");
+	str = expand_var("VAR1", mini.env);
+	if (str)
+	{
+		printf("%s\n", str);
+		free(str);
+	}
 	if (mini.env_len > 0)
 		free_split(mini.env);
 	if (mini.var_len > 0)
@@ -429,4 +466,22 @@ int main(int argc, char **argv, char **envp)
 // 			mini->var = add_str(mini->var, enter_var, &mini->var_len);
 // 		free(name);
 // 	}
+// }
+
+/* dada una variable y su valor la añade o actualiza a un nuevo valor en env*/
+// void enter_env(t_mini *mini, char *enter_var)
+// {
+// 	char	*name;
+// 	char	*expand;
+
+// 	name = name_var(enter_var);
+// 	expand = expand_var(name, mini->env);
+// 	if (expand)
+// 	{
+// 		change_value(mini->env, enter_var);
+// 		free(expand);
+// 	}
+// 	else
+// 		mini->env = add_str(mini->env, enter_var, &mini->env_len);
+// 	free(name);
 // }
